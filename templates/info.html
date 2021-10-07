@@ -10,8 +10,31 @@
         <p><strong>First Name:</strong> {{ user.first_name }}</p>
         <p><strong>Last Name:</strong> {{ user.last_name }}</p>
 
-        <form action="/logout">
-            <button class="btn btn-danger">Logout</button>
+        <a class="btn btn-primary" href="/users/{{ user.username }}/feedback/add">Add Comment</a>
+        <form action="/logout" style="display: inline;">
+            <button class="btn btn-secondary">Logout</button>
         </form>
+        <form action="/users/{{ user.username }}/delete" method="POST" style="display: inline;">
+            <button class="btn btn-danger" >Delete User</button>
+        </form>
+    </div>
+
+    <div class="container mt-5">
+    <h2>Feedback</h2>
+    {% if user.comments %}
+        {% for comment in user.comments %}
+        <div class="form-control my-5">
+            <h4>{{ comment.title }}</h4>
+            <p>{{  comment.content }}</p>
+
+            <a class="btn btn-secondary" href="/feedback/{{ comment.id }}/update">Edit Comment</a>
+            <form action="/feedback/{{ comment.id }}/delete" method="POST" style="display: inline;">
+                <button class="btn btn-danger">Delete</button>
+            </form>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p>No comments</p>
+        {% endif %}
     </div>
 {% endblock %}

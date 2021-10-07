@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField
+from wtforms import StringField, PasswordField, TextAreaField
 from wtforms.validators import InputRequired
 
 
@@ -18,3 +18,10 @@ class LoginUserForm(FlaskForm):
     
     username = StringField('Username', validators=[InputRequired()])
     password = PasswordField('Password', validators=[InputRequired()])
+    
+    
+class CreateFeedbackForm(FlaskForm):
+    '''A form that creates a new piece of feedback.'''
+    
+    title = StringField('Title')
+    content = TextAreaField('Content')

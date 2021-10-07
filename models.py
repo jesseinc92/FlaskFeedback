@@ -54,6 +54,6 @@ class Feedback(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     title = db.Column(db.String(100), nullable=False)
     content = db.Column(db.Text, nullable=False)
-    username = db.Column(db.String, ForeignKey=True)
+    username = db.Column(db.String, db.ForeignKey('users.username'), nullable=False)
     
     user = db.relationship('User', backref='comments')

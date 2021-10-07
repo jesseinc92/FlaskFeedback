@@ -1,8 +1,7 @@
 from flask import Flask, render_template, redirect, session
 from flask_wtf import form
-from wtforms.fields.simple import PasswordField
-from models import db, connect_db, User
-from forms import CreateUserForm, LoginUserForm
+from models import Feedback, db, connect_db, User, Feedback
+from forms import CreateUserForm, LoginUserForm, CreateFeedbackForm
 
 
 app = Flask(__name__)
@@ -90,3 +89,99 @@ def secret_page(username):
     else:
         user = User.query.filter_by(username=username).first()
         return render_template('info.html', user=user)
+    
+    
+@app.route('/users/<username>/delete', methods=['POST'])
+def delete_user(username):
+    '''Deletes user from the database.'''
+    
+    if username == session['user']:
+    
+        # delete all user feedback from database
+        posts = Feedback.query.filter_by(username=username).all()
+        for post in posts:
+            db.session.delete(post)
+            db.session.commit()
+                    
+        # delete user from database
+        user = User.query.get(username)
+        db.session.delete(user)
+        db.session.commit()
+        
+        # clear all user information from session
+        session.pop('user')
+        
+        return redirect('/')
+    
+    return redirect('/login')
+
+
+@app.route('/users/<username>/feedback/add', methods=['GET', 'POST'])
+def add_user_feedback(username):
+    '''Adds feedback that is associated with the logged in user.'''
+    
+    if 'user' not in session:
+        return redirect('/login')
+    
+    else:
+        form = CreateFeedbackForm()
+        if form.validate_on_submit():
+            
+            title = form.title.data
+            content = form.content.data
+            
+            new_feedback = Feedback(title=title, content=content, username=username)
+            db.session.add(new_feedback)
+            db.session.commit()
+            
+            return redirect(f'/users/{username}')
+        
+        return render_template('feedback.html', form=form)
+    
+    
+@app.route('/feedback/<int:feedback_id>/update', methods=['GET', 'POST'])
+def update_feedback(feedback_id):
+    '''Displays a form to update user-specific feedback.'''
+    
+    post = Feedback.query.get(feedback_id)
+    
+    if 'user' not in session:
+        return redirect('/login')
+    
+    if session['user'] == post.user.username:
+        
+        form = CreateFeedbackForm(obj=post)
+        if form.validate_on_submit():
+            title = form.title.data
+            content = form.content.data
+            
+            post.title = title
+            post.content = content
+            db.session.commit()
+            
+            return redirect(f'/users/{post.user.username}')
+            
+        return render_template('update-feedback.html', form=form)
+    
+    else:
+        return redirect(f'/users/{post.user.username}')
+    
+
+
+@app.route('/feedback/<int:feedback_id>/delete', methods=['POST'])
+def delete_feedback(feedback_id):
+    '''Deletes a comment from the database.'''
+    
+    post = Feedback.query.get(feedback_id)
+    
+    if 'user' not in session:
+        return redirect('/login')
+    
+    if session['user'] == post.user.username:
+        db.session.delete(post)
+        db.session.commit()
+    
+        return redirect(f'/users/{post.user.username}')
+    
+    else:
+        return redirect('/login')
